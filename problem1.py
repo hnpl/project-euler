@@ -18,4 +18,4 @@ sumA = 3 * (A * (A + 1)) // 2
 sumB = 5 * (B * (B + 1)) // 2
 sumC = 15 * (C * (C + 1)) // 2
 
-print("{}".format(sumA + sumB - sumC))
+print(sumA + sumB - sumC)
