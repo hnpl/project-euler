@@ -30,7 +30,6 @@ for n, row in enumerate(triangle.split('\n')):
     old_DP, DP = DP, old_DP # pointer swapping
     for i in range(1, n+2):
         DP[i] = max(old_DP[i-1], old_DP[i]) + nums[i]
-    print(DP)
 
 assert(DP[0] == 0)
 assert(DP[-1] == 0)
