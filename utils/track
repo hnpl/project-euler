@@ -1,0 +1,40 @@
+#! /usr/bin/python3
+
+import glob
+import re
+
+sol = glob.glob("problem*")
+
+nums = set()
+
+for s in sol:
+    n = re.search(r'\d+', s)
+    nums.add(int(n.group()))
+
+m = max(nums)
+
+table_per_row = 3
+
+print()
+for i in range(0, (m // 100 + 1) // table_per_row + 1): # 10 x 10 table
+    st = []
+    for j in range(10): # 10 rows
+        s = []
+        for x in range(table_per_row):
+            if i*table_per_row + x > m//100:
+                break
+            for k in range(10): # 10 cols
+                n = (i*table_per_row + x)*100 + j*10 + k + 1
+                if n in nums:
+                    n_st = "\033[93m{}\033[0m".format(n)
+                else:
+                    n_st = '\033[90m{}\033[0m'.format(n)
+                s.append("{num:{fill}{align}{width}}".format(num = n_st, fill = ' ', align = '>', width = len('\033[91m\033[0m') + 5))
+            if not x == table_per_row - 1:
+                s.append(' ||')
+        st.append(''.join(s))
+    st = '\n'.join(st)
+    print(st)
+    print()
+        
+    
