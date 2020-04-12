@@ -46,3 +46,21 @@ print(DP1[N] + DP2[N])
 
 assert(DP1[7] + DP2[7] == 17)
 
+# ---
+# Even better recursive formula
+# Let DP[N] = DP1[N] + DP2[N]
+# We have, DP1[N] = DP1[N-1] + DP2[N-1] = DP[N-1] -> DP1[N] = DP[N-1]
+#                                                and DP2[N-1] = DP[N-1] - DP1[N-1] = DP[N-1] - DP[N-2]
+# We have DP2[N] = DP1[N-3] + DP2[N-1] = DP[N-4] + (DP[N-1] - DP[N-2]) 
+# So, DP[N] = DP1[N] + DP2[N] = DP[N-1] + (DP[N-4] + DP[N-1] - DP[N-2]) = 2 * DP[N-1] - DP[N-2] + DP[N-4]
+
+DP = [0] * (N+1)
+DP[0] = 1
+DP[1] = 1
+DP[2] = 1
+DP[3] = 2
+for i in range(4, N+1):
+    DP[i] = 2 * DP[i-1] - DP[i-2] + DP[i-4]
+print(DP[N])
+
+assert(DP[N] == DP1[N] + DP2[N])
