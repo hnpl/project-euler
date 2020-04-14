@@ -1,7 +1,111 @@
 # Question: https://projecteuler.net/problem=220
 
+# I. REPRESENTATION
+#
+# a -> (aRb)FR -> (aRb)FRRLF(aLb)FR
+# (aRb) -> (aRb)FRRLF(aLb) = (aRb)FRF(aLb)
+# (aLb) -> (aRb)FRLLF(aLb) = (aRb)FLF(aLb)
+# So, (aRb) and (aLb) generate strings with patterns of (aRb)ccc(aLb) where ccc does not regenerate.
+#
+# Let 1 <- aRb (0 steps)
+#     2 <- FRF (2 steps)
+#     3 <- aLb (0 steps)
+#     4 <- FLF (2 steps)
+# So, 1 -> 123 and 3 -> 143
+# Then, D[1] = 1
+#       D[2] = 123
+#       D[3] = 123 2 143
+#       D[4] = 123 2 143 2 123 4 143
+# This is the inorder traversal pattern of a perfect binary tree, of which the root is '2', the left internal nodes are '2', the right internal nodes are '4', the left leaves are '1' and the right leaves are '3'.
+#
+# After 1 iteration, the '1' leaves become subtrees of the shape
+#         2
+#       /   \
+#       1   3
+# and the '3' leaves become subtrees of the shape
+#         4
+#       /   \
+#       1   3
+# while other nodes are the same.
+# 
+# Let L[n] denote the perfect binary tree of the above properties with root is '2',
+#     R[n] denote the perfect binary tree of the above properties with root is '4'.
+# The inorder traversal pattern of L[n] is that, to traverse L[n], we traverse left node of L[n], root of L[n], right node of L[n].
+# Note that left node of L[n] is L[n-1], root of L[n] is '2', right node of L[n] is R[n-1].
+#             L[n]:       2                              R[n]:            4
+#                        / \                                             / \
+#                   L[n-1] R[n-1]                                   L[n-1] R[n-1]
+# Basically, traverse(L[n]) = traverse(L[n-1]) + '2' + traverse(R[n-1])
+#            traverse(R[n]) = traverse(L[n-1]) + '4' + traverse(R[n-1])
+# II. CALCULATING THE DISPLACEMENT
+# Note that, we only care about the displacement of the cursor, and we don't care about the path, so we only need to keep track of delta_x, delta_y, and delta_direction of the cursor for each subtree of the tree, and we can use memoization to avoid recalculating the displacement.
+# ie,
+# displacement = (delta_x, delta_y, delta_direction)
+# displacement(L[n]) = displacement(L[n-1]) + displacement('2') + displacement(R[n-1])
+# displacement(R[n]) = displacement(L[n-1]) + displacement('4') + displacement(R[n-1])
+# where displacement_1 + displacement_2 = (delta_x1 + delta_x2, delta_y1 + delta_y2, (delta_direction_1 + delta_direction_2) % 5)
+#
+# III. TRAVERSAL ORDER
+# Note that, D_50 has ~2^50 nodes >> 10^12, the cursor will not traverse the whole tree.
+# Also, inorder traverse prioritizes traversing the left subtree then root then right subtree.
+# So, the traversal pattern would actually be L[x_1] -> parent of L[x_1] -> L[x_2] -> parent of L[x_2] -> L[x_3] -> parent of L[x_3] -> ...
+#                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+#                                                                           sub-sub-sub-...-subtree of R[x_1] (we might not traverse the whole R[x_1])
+# where x_1 > x_2 > x_3 > ...
+#
+#                                                 L[x_1+1]
+#                                                /        \
+#                                             L[x_1]    .....
+#                                                      /
+#                                                  L[x_2+1]
+#                                                 /        \
+#                                              L[x_2]     .....
+#                                                        /
+#                                                     L[x_3]
+# 
+# Suppose we know the number of steps in L[i] for all i, and the number of steps is n_steps.
+# Then, first, we find L[x_1] such that steps[L[x_1]] < n_steps < steps[L[x_1+1]]
+#           -> n_steps - steps[L[x_1]] steps remaining
+#       then, we traverse the root of L[x_1+1]
+#           -> n_steps - steps[L[x_1]] - 2 steps remaining
+#       then, we find L[x_2] such that steps[L[x_2]] < n_steps_remaining < steps[L[x_2+1]]
+#           -> n_steps - steps[L[x_1]] - 2 - steps[L[x_2]] steps remaining
+#       then, we traverse the root of L[x_2+1]
+#           -> n_steps - steps[L[x_1]] - 2 - steps[L[x_2]] - 2 steps remaining
+# and so on ...
+#
+# Suppose we know x_1, x_2, x_3, ...
+# What are the parent of x_1, x_2, x_3, ... ? (or, which ones are '2', and which ones are '4' ?)
+# Obviously, root(L[x_1+1]) is '2' (first, we need to traverse the whole left subtree of a node).
+# There are two cases,
+#     Case 1: x_i = x_j + 1 -> root(R[x_i]) is the parent of L[x_j]
+#                     L[x_i+1]
+#                    /        \
+#                 L[x_i]    R[x_i]
+#                          /      \
+#                      L[x_i-1]  .....
+#                      ^^^^^^^^
+#                       L[x_j]
+#             -> parent of L[x_j] is '4'
+#     Case 2: x_i > x_j + 1
+#                     L[x_i+1]
+#                    /        \ 
+#                 L[x_i]    R[x_i]
+#                          /
+#                      L[x_i-1]
+#                     /
+#                   .....
+#                   /
+#                L[x_j+1]
+#                 /
+#              L[x_j]
+#              -> parent of L[x_j] is '2'
+
+
 n_steps = 10**12
 N = 50
+
+
 
 # 1 -> R
 # 2 -> FRF
