@@ -36,5 +36,5 @@ for i in range(0, (m // 100 + 1) // table_per_row + 1): # 10 x 10 table
     st = '\n'.join(st)
     print(st)
     print()
-        
-    
+
+print("Total: {}".format(len(nums)))
