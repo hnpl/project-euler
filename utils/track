@@ -13,7 +13,7 @@ for s in sol:
 
 m = max(nums)
 
-table_per_row = 3
+table_per_row = 2
 
 print()
 for i in range(0, (m // 100 + 1) // table_per_row + 1): # 10 x 10 table
