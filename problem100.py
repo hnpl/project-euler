@@ -34,4 +34,7 @@ f_x = f[l][x]
 
 result = f_x(n).n()
 
-print(int(result)) # This produces off by 1 result
+print(int(result)) # This produces off by 1 result as the result is originally of a floating point type
+
+# Wolfram Alpha has the exact answer
+# https://www.wolframalpha.com/input/?i=diophantine+equation+%282x%5E2-2x-y%5E2%2By%29
