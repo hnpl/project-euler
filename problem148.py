@@ -135,12 +135,6 @@ class Level:
         return self.L
     def get_n_zeros(self):
         return self.n_zeros
-    def get_n_zeros_k_rows_after_block_row(self, block_row, k):
-        n_zeros = 0
-        block_row = block_row + 1
-        return n_zeros
-    def print(self):
-        print(self.L)
 
 L = [None]
 first_O = [0, 0]
@@ -186,7 +180,5 @@ for x, l in enumerate(traverse_order + [0]):
         else:
             n_zeros = n_zeros + L_multiplier[-1]*block.get_n_zeros()
     prev_l = l
-
-n_zeros = n_zeros + level.get_n_zeros_k_rows_after_block_row(block_row, k = n_remaining_rows)
 
 print(sum1n(N) - n_zeros)
