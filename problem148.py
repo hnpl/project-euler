@@ -90,9 +90,31 @@ for i in range(70):
 [1, 6, 1, 6, 1, 6, 1, 2, 5, 2, 5, 2, 5, 2, 1, 6, 1, 6, 1, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 1, 6, 1, 6, 1, 2, 5, 2, 5, 2, 5, 2, 1, 6, 1, 6, 1, 6, 1]
 """
 
+def binary_search(array, target):
+    l = 0
+    r = len(array)
+    while l < r:
+        m = (l+r) // 2
+        if array[m] > target:
+            r = m - 1
+        elif array[m] < target:
+            l = m + 1
+    if array[l] > target:
+        l = l - 1
+    return l
+
 height_L = [1]
 N = 10**9
-sum1n = lambda n: n*(n+1)//2
+cache_sum1n = {}
+
+def sum1n_(n):
+    if not n in cache_sum1n:
+        cache_sum1n[n] = n*(n+1)//2
+    return cache_sum1n[n]
+if N < 10**100:
+    sum1n = lambda n: n*(n+1)//2
+else:
+    sum1n = sum1n_
 
 L = 0
 while height_L[-1] <= N:
@@ -106,9 +128,7 @@ n_remaining_rows = N
 
 while n_remaining_rows > 7:
     next_L = 0
-    while height_L[next_L] <= n_remaining_rows:
-        next_L = next_L + 1
-    next_L = next_L - 1
+    next_L = binary_search(height_L, n_remaining_rows)
     traverse_order.append(next_L)
     n_remaining_rows = n_remaining_rows - height_L[next_L]
 
@@ -138,13 +158,11 @@ class Level:
 
 L = [None]
 first_O = [0, 0]
-sum_O = [0, 0]
 L1 = Level(1, None, first_O, construct = False)
 L.append(L1)
 
 for i in range(2, max_L+1):
     first_O.append(height_L[i-1] - 1)
-    sum_O.append(sum1n(first_O[-1]))
 
 for i in range(2, max_L+1):
     L.append(Level(i, L[-1], first_O))
@@ -155,14 +173,14 @@ prev_l = 0
 L_multiplier = [1]
 curr_height = 0
 block_row = -1
-prev_block_rows = []
+prev_block_rows = None
 n_zeros = 0
 
 for x, l in enumerate(traverse_order + [0]):
     if x > 0 and not prev_l == l:
-        prev_block_rows.append(level.get_L()[block_row+1])
+        prev_block_rows = level.get_L()[block_row+1]
         i = 0
-        for block in prev_block_rows[-1]:
+        for block in prev_block_rows:
             if isinstance(block, Level):
                 i = i + 1
         L_multiplier.append(L_multiplier[-1] * i)
