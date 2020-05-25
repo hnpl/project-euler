@@ -4,7 +4,7 @@
     Lemma 1: A(n) <= n
     We have that, for all k such that GCD(n,10)=1, there exists k such that n|R(k).
     Assume that A(n) > n and GCD(n,10)=1.
-    We have that modulus are cyclic (don't know maths term for this).
+    We have that modulus are periodic (don't know maths term for this).
     Since we have n different modulus for modulo of n, the length of the cycle must be <=n (and has <=n different values).
     Since the cycle has the length of <= n, and since there exists k such that n|R(k), A(n) = k < n (contradiction).
     So A(n) <= m.
