@@ -3,11 +3,12 @@
 import glob
 import re
 
-sol = glob.glob("problem*")
+sol = glob.glob("*/problem*")
 
 nums = set()
 
 for s in sol:
+    s = s.split("/")[1]
     n = re.search(r'\d+', s)
     nums.add(int(n.group()))
 
