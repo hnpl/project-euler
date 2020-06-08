@@ -44,7 +44,7 @@ A_mod_B = 241
 cached_A_mod_C = {}
 def find_A_mod_C(A_mod_C):
     if not A_mod_C in cached_A_mod_C:
-        cached_A_mod_C[A_mod_C] = (1777**A_mod_C) % 312500
+        cached_A_mod_C[A_mod_C] = (1777**(A_mod_C%62500)) % (312500)
     return cached_A_mod_C[A_mod_C]
 
 A_mod_C = 1777
