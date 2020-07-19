@@ -1,5 +1,5 @@
 // Question: https://projecteuler.net/problem=417
-// g++ problem417_pari.cpp -I{$HOME}/pari/include/ -L{$HOME}/pari/lib -lpari
+// g++ problem417_pari.cpp -I$HOME/pari/include/ -L$HOME/pari/lib -lpari -O3
 
 #include<pari/pari.h>
 #include<iostream>
@@ -22,7 +22,7 @@ inline long find_cycle_length(long n)
     count = count + 1;
     if (count % 1000000 == 0)
         pari_init(100000000,2);
-    long ans = gtolong(order(gmodulss(10, n)));
+    long ans = gtolong(order(gmodulss(10, n))); // order(): find multiplicative order, gmodulss(10, n): find n mod 10
     if (count % 1000000 == 1000000-1)
         pari_close();
     return ans;

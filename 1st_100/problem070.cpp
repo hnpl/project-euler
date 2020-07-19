@@ -1,4 +1,4 @@
-// Question:https://projecteuler.net/problem=51
+// Question:https://projecteuler.net/problem=70
 
 #include<iostream>
 #include<vector>
