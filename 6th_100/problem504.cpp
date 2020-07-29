@@ -23,7 +23,7 @@ inline ui count_interior_points(ui a, ui b)
         Calculate the number of lattice points on the sides of the rectangle:
             beta = 2*(a+2) + 2*(b+2) - 4
         Calculate the number of lattice points on ONE diagonal of the rectangle:
-            gammma = a/(b/gcd(a,b))+1
+            gammma = b/(b/gcd(a,b))+1
         Calculate the number of interior points of the triangle:
             [alpha - beta - (gamma - 2)] / 2
     */
