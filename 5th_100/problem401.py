@@ -18,7 +18,7 @@
     Instead, first, we calculate sum_{i=1 to floor(sqrt(N))}(floor(N/i) * i^2)
              then, we calculate sum_{i=1 to floor(sqrt(N))} (i * sum_square(floor(N/i) to floor(N/(i+1)))
     This is a result of,
-        For all j such that floor(N/i) <= j < floor(N/(i+1)), floor(j) = i.
+        For all j such that floor(N/i) <= j < floor(N/(i+1)), floor(N/j) = i.
     We only iterate upto floor(sqrt(N)) twice, so O(sqrt(N)).
 """
 
