@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<vector>
+#include<thread>
 
 using namespace std;
 
@@ -77,13 +78,39 @@ i64 DFS(i64 depth, vector<int>& board)
     return total;
 }
 
+struct ThreadResult
+{
+    int ans;
+};
+
+void worker(i64 first_number, ThreadResult& output)
+{
+    vector<int> board = vector<int>(10);
+    board[1] = first_number;
+    output.ans = DFS(2, board);
+}
+
 int main()
 {
     i64 ans = 0;
 
-    vector<int> board = vector<int>(10);
+    i64 n_threads = 10;
 
-    ans = DFS(1, board);
+    vector<thread> threads;
+    vector<ThreadResult> thread_results = vector<ThreadResult>(n_threads);
+
+    for (int i = 0; i < n_threads; i++)
+    {
+        thread new_thread(worker, i, ref(thread_results[i]));
+        threads.push_back(move(new_thread));
+    }
+    
+
+    for (int i = 0; i < n_threads; i++)
+        threads[i].join();
+
+    for (auto& result: thread_results)
+        ans = ans + result.ans;
 
     cout << ans << endl;
 
