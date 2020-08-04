@@ -70,7 +70,7 @@ int main()
             // rads[abc] = rads[a] * rads[b] * rads[c]
             // rads[a] * rads[b] * rads[c] < c , so rads[a] * rads[b] < c / rads[c]
 
-            // if ((gcd(a,b) == 1) && (rads[a] * rads[b] < c_over_rads[c]))     // 10s slower
+            // if ((gcd(a,b) == 1) && (rads[a] * rads[b] < c_over_rads[c]))     // 10x slower
             // if ((rads[a] * rads[b] < c/rads[c]) && (gcd(a, b) == 1))         // 10x slower
             if ((rads[a] * rads[b] < c_over_rads[c]) && (gcd(a, b) == 1))
                 ans = ans + c;
