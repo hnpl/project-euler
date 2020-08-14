@@ -5,7 +5,7 @@
     The number of distinct ways to reach the final state is small
         -> we can iterate through each way
             -> calculate the probability of that state and count the number of times there is only one sheet
-        -> using the linearlity of expectation, the expectation of number of times one sheet is encountered is: 
+        -> using the linearity of expectation, the expectation of number of times one sheet is encountered is: 
             sum_{w: ways} (probability of w * number_of_one_sheet_encounters)
 """
 

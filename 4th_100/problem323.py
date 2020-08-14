@@ -21,7 +21,7 @@ import numpy as np
 
     Apply Markov chain, we can figure out the probability of having 2^N bits set after applying bitwise-OR k times as follows,
         S_{k} = S * T^k
-    To calculate the expected value of N, and due to linearlity of expectations, we can follow the following formula to calculate E(N):
+    To calculate the expected value of N, and due to linearity of expectations, we can follow the following formula to calculate E(N):
         E(N) = sum_{i = 1 to inf} (S[N] - prev_S[N]) * i
     We expect this series to converge, so we calculate the sum for each K as in sum_{i = 1 to K} (S[N] - prev_S[N]) * i until it converges.
 """
