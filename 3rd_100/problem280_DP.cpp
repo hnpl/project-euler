@@ -148,7 +148,7 @@ struct State
             encoded_state >>= 1;
         }
 
-        // bit 11-25: bits[11..13] == n_seeds in grid[N-1][0]
+        // bit 11-25: bits[11..13] == n_seeds in grid[N-1][0]            // I misunderstood that a square could have any number of seeds
         //            bits[14..16] == n_seeds in grid[N-1][1]
         //            and so on
         for (ui i = 0; i < N; i++)
