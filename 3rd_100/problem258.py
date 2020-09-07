@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
         SR = np.dot(TR**(N//K), SR)
 
-        residues[mod] = SR[0]
+        residues[mod] = lift(SR[0, 0])
 
     m = 1
     r = 0
