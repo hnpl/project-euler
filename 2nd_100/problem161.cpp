@@ -88,15 +88,11 @@ class State
         // bits[5..] : next 3 rows
         void encode(THash& grid_hash, ui& n_filled_rows)
         {
-            //bitset<3*(M+1)> bits = grid_hash;
-            //cout << "Encoding " << bits << ", "<< n_filled_rows << endl;
             THash hash = 0;
 
             ui h = min((ui)3, N - n_filled_rows);
             ui w = M+1;
 
-            //ui msb_index = 0;
-            //hash = hash | (h << msb_index);
             ui msb_index = 5;
 
             // placing the fences
@@ -110,7 +106,6 @@ class State
                 // if the row is completely filled, increase n_filled_rows and skip to the next row
                 if (((grid_hash & mask(w)) == mask(w)) && prev_filled)
                 {
-                    //cout << "---filled " << i << endl;
                     n_filled_rows += 1;
                     grid_hash >>= w;
                     continue;
@@ -168,63 +163,16 @@ class State
         {
             ui wh = this->width * this->height;
             THash shape_hash = shape.get_hash();
-            //bitset<9> shape_hash_bitset = shape_hash;
-            //ui shape_hash_bits = shape_hash.count();
             THash shift_factor = row * this->width + col;
             if (shift_factor + shape.most_significant_one_index > wh)
                 return false;
             THash shape_hash_shifted = shape_hash << shift_factor;
-            //bitset<9> shape_hash_shifted_bitset = shape_hash_shifted;
-            //ui shape_hash_shifted_bits = shape_hash_shifted.count();
-            //if (shape_hash_shifted_bits != shape_hash_bits)
-            //    return false;
-            //cout << "tried ";
-            //bitset<3*(M+1)> bits = shape_hash_shifted;
-            //cout << bits << " + ";
-            //bits = this->grid_hash;
-            //cout << bits << " = ";
             
             if ((shape_hash_shifted & this->grid_hash) == 0)
             {
                 grid_hash = shape_hash_shifted | this->grid_hash;
-
-                //bits = grid_hash;
-                //cout << bits << endl;
-                //if (this->is_filled_then_partially_filled_then_unfilled1(grid_hash))
                 return true;
             }
-            else
-            {
-                //bits = shape_hash;
-                //cout << "failed" << " " << bits<< endl;
-            }
-            /*            
-            for (ui i = 0; i < wh - shape.most_significant_one_index; i++)
-            {
-                if ((shape_hash & this->grid_hash) == 0)
-                {
-                    grid_hash = shape_hash | this->grid_hash;
-                    return true;
-                }
-                shape_hash <<= 1ULL;
-            }
-            */
-            
-            /*
-            for (ui col = 0; col < this->width-2; col++)
-            {
-                for (ui row = 0; row < this->height; row++)
-                {
-                    shift_factor = row * this->width + col;
-                    THash shape_hash_shifted = shape_hash << shift_factor;
-                    if ((shape_hash_shifted & this->grid_hash) == 0)
-                    {
-                        grid_hash = shape_hash_shifted | this->grid_hash;
-                        return true;
-                    }   
-                }
-            }
-            */
             
             return false;
         }
@@ -237,10 +185,8 @@ class State
             ui row = 0;
             bool found = false;
             for (row = 0; row < this->height; row++)
-            //for (col = 0; col < this->width-1; col++)
             {
                 for (col = 0; col < this->width-1; col++)
-                //for (row = 0; row < this->height; row++)
                 {
                     ui bit = ((this->grid_hash) >> (row * this->width + col)) & mask(1);
                     if (bit == 0)
@@ -271,27 +217,11 @@ class State
                 if (i == 4 && col > 0)
                 {
                     if (this->try_placing_shape(shape, next_grid_hash, col-1, row))
-                    {
                         next_states.push_back(State(next_grid_hash, next_n_filled_rows));
-                        //bitset<5+3*(M+1)> bits = next_states[next_states.size()-1].get_state_hash();
-                        //cout << "Generating state: ";
-                        //next_states[next_states.size()-1].print_state();
-                        //bitset<5+3*(M+1)> bits2 = this->grid_hash;
-                        //cout <<" by applying shape " << i << " at (" << col << "," << row<<") to " ;
-                        //this->print_state();
-                        //cout << endl;
-                    }    
                 }
                 if (this->try_placing_shape(shape, next_grid_hash, col, row))
                 {
                     next_states.push_back(State(next_grid_hash, next_n_filled_rows));
-                    //bitset<5+3*(M+1)> bits = next_states[next_states.size()-1].get_state_hash();
-                    //cout << "Generating state: ";
-                    //next_states[next_states.size()-1].print_state();
-                    //bitset<5+3*(M+1)> bits2 = this->grid_hash;
-                    //cout <<" by applying shape " << i << " at (" << col << "," << row<<") to " ;
-                    //this->print_state();
-                    //cout << endl;
                 }
             }
 
@@ -360,21 +290,9 @@ ui dfs(State state,
 
     for (auto next_state: next_states)
     {
-        //cout << "From: ";
-        //state.print_state();
-        //cout << " - Visit: ";
-        //next_state.print_state();
-        //cout << endl;
         if (cache.find(next_state.get_state_hash()) == cache.end())
             cache[next_state.get_state_hash()] = dfs(next_state, shapes, cache);
         ans += cache[next_state.get_state_hash()];
-
-        //cout << "From: ";
-        //state.print_state();
-        //cout << " - Visit: ";
-        //next_state.print_state();
-        //cout << " = " << cache[next_state.get_state_hash()];
-        //cout << endl;
     }
 
     return ans;
