@@ -2,6 +2,8 @@
 
 from sage.all import *
 
+from collections import defaultdict
+
 N = 10**10000
 MOD = 100000007
 
@@ -110,7 +112,7 @@ class State:
     def get_hash(self):
         return (self.occupy_hash << (State.__width * State.__height)) | self.state_hash
 
-    def add_tile(self, row, col, label): # add a single tile, i.e. shape3
+    def add_tile(self, row, col, label): # add a single tile, i.e. tail of shape3
         self.state_hash = self.state_hash | (label << (row * State.__width + col))
         self.occupy_hash = self.occupy_hash | (1 << (row * State.__width + col))
         self.n_empty_tiles = self.n_empty_tiles - 1
@@ -155,13 +157,10 @@ class State:
 
 cache = {}
 
-def dfs(state, possible_shapes):
-    print("exploring ", end = '')
-    state.describe_state()
-
+def dfs(state, possible_shapes, full_states_freq):
     if state.is_full():
-        print("full ", end = '')
-        state.describe_state()
+        assert(state.state_hash > 0)
+        full_states_freq[state.get_state_hash()] += 1
         return 1
     
     if state.get_hash() in cache:
@@ -170,15 +169,17 @@ def dfs(state, possible_shapes):
     state_count = 0
 
     for next_state in state.generate_next_states(possible_shapes):
-        state_count += dfs(next_state, possible_shapes)
+        state_count += dfs(next_state, possible_shapes, full_states_freq)
 
     if not state.get_hash() in cache:
         cache[state.get_hash()] = state_count
 
     return state_count
 
-def count_state_permutations(inital_state, possible_shapes):
-    return dfs(inital_state, possible_shapes)
+def get_state_permutations(inital_state, possible_shapes):
+    full_states_freq = defaultdict(lambda: 0)
+    dfs(inital_state, possible_shapes, full_states_freq)
+    return full_states_freq
 
 if __name__ == "__main__":
     ans = 0
@@ -187,6 +188,18 @@ if __name__ == "__main__":
 
     inital_state = State()
 
-    print(count_state_permutations(inital_state, shapes))
+    full_state_permutations_freq = get_state_permutations(inital_state, shapes)
+
+    n_states = len(full_state_permutations_freq)
+
+    print(n_states)
+
+    R = IntegerModRing(MOD)
+
+    ## building the transition matrix, certainly not a sparse matrix
+    T = matrix(R, n_states, n_states)
+
+    ## Use Berlekamp-Massey algorithm to find the minimal polynomial?
+
 
     print(ans)
