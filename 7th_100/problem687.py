@@ -1,5 +1,15 @@
 # Problem: https://projecteuler.net/problem=687
 
+"""
+    . Define a state as a composition of the following:
+        . n_remaining_count_freq as
+            n_remaining_count_freq[k] = m means that there are m ranks having k cards of the same rank that haven't been picked
+        . n_most_recent_card_rank_remaining: the number of remaining cards having the same rank as the most recent picked card
+        . most_recent_card_rank_is_perfect: whether the most recent card's rank is perfect
+        . n_perfect_ranks: the number of perfect ranks
+    . Starting from no cards having been picked, picking one card at a time and iterating through all generated states until all 52 cards have been picked.
+"""
+
 N = 52
 N_RANKS = 13
 N_CARDS_PER_RANK = 4
@@ -86,12 +96,6 @@ class State:
         if self.most_recent_card_rank_is_perfect:
             n_imperfect_rank_cards -= self.n_most_recent_card_rank_remaining
 
-        #print("Generating next states from:", end = " ")
-        #self.describe_state()
-
-        #print(n_imperfect_rank_cards, self.n_remaining_count_freq, n_remaining_cards, self.n_most_recent_card_rank_remaining)
-        #assert(n_imperfect_rank_cards >= 0)
-
         # picking one of the perfect ranks that is not the most recent rank
         next_n_remaining_count_freq = self.n_remaining_count_freq[:]
         # --- put the card back, but remember not to choose this card
@@ -112,6 +116,15 @@ class State:
             next_states.append((next_state, n_choices))
             next_n_remaining_count_freq[count] += 1
 
+        # picking one of the imperfect ranks
+        if n_imperfect_rank_cards > 0:
+            n_choices = n_imperfect_rank_cards
+            next_n_most_recent_card_rank_remaining = 0
+            next_most_recent_card_rank_is_perfect = 0
+            next_n_perfect_ranks = self.n_perfect_ranks
+            next_state = State(next_n_remaining_count_freq, next_n_most_recent_card_rank_remaining, next_most_recent_card_rank_is_perfect, next_n_perfect_ranks)
+            next_states.append((next_state, n_choices))
+
         # put the card that has been put back out
         if self.most_recent_card_rank_is_perfect:
             next_n_remaining_count_freq[self.n_most_recent_card_rank_remaining] -= 1
@@ -123,15 +136,6 @@ class State:
             next_n_most_recent_card_rank_remaining = 0
             next_most_recent_card_rank_is_perfect = 0
             next_n_perfect_ranks = self.n_perfect_ranks - 1
-            next_state = State(next_n_remaining_count_freq, next_n_most_recent_card_rank_remaining, next_most_recent_card_rank_is_perfect, next_n_perfect_ranks)
-            next_states.append((next_state, n_choices))
-
-        # picking one of the imperfect ranks
-        if n_imperfect_rank_cards > 0:
-            n_choices = n_imperfect_rank_cards
-            next_n_most_recent_card_rank_remaining = 0
-            next_most_recent_card_rank_is_perfect = 0
-            next_n_perfect_ranks = self.n_perfect_ranks
             next_state = State(next_n_remaining_count_freq, next_n_most_recent_card_rank_remaining, next_most_recent_card_rank_is_perfect, next_n_perfect_ranks)
             next_states.append((next_state, n_choices))
 
@@ -183,17 +187,12 @@ if __name__ == "__main__":
                     curr_states[next_state_hash] = prev_state_count * next_state_count
                 else:
                     curr_states[next_state_hash] += prev_state_count * next_state_count
-        print(n_picked_cards, len(curr_states))
-
     total = 0
     for state_hash, state_count in states[curr_index].items():
         state = state_hash_state_map[state_hash]
         if state.get_n_perfect_ranks() in primes:
             ans += state_count
         total += state_count
-
-    print(ans)
-    print(total)
 
     print(ans * 1.0 / factorial(52))
 
