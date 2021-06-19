@@ -14,7 +14,6 @@
 #include <iostream>
 #include <unordered_set>
 #include <cassert>
-#include <cmath>
 
 typedef uint64_t ui;
 
@@ -38,9 +37,11 @@ int main()
     ui a = 1;
     ui aa = a * a;
 
+    ui sqrt_a = 1; //saving some fp ops
+    ui next_change_sqrt_a = 4;
+
     while (aa <= N)
     {
-        ui sqrt_a = ui(sqrt(double(a)));
         for (ui divisor = 1; divisor <= sqrt_a; divisor++)
         {
             if (a % divisor == 0)
@@ -57,6 +58,12 @@ int main()
         }
         a += 1;
         aa = a * a;
+
+        if (a == next_change_sqrt_a)
+        {
+            sqrt_a += 1;
+            next_change_sqrt_a = (sqrt_a+1) * (sqrt_a+1);
+        }
     }
 
     cout << ans.size() << endl;
