@@ -33,7 +33,9 @@
       . So, g(START, END) = STEP * (START//2) + (STEP // 2) * (STEP // 2 - 1) + STEP + g(START//2, START//2 + STEP//2 -1)
                           = ... (recursively compute g)
       . Note that, g(START, START) = a(START), which can be computed recursively.
-                   g(START, START) is guaranteed to happen after k_(m+) recursive steps.
+                   g(START, START) is guaranteed to happen after k_(m+1) recursive steps.
+    - So, suppose that N = 2**(p_1) + 2**(p_2) + ... + 2**(p_m), where p_1 > p_2 > ... > p_m, then we can find a(N) as,
+        a(N) = sum(s(k) for k from 1 to p_1) + g(2**(p_1), 2**(p_1)+2**(p_2)-1) + g(2**(p_1)+2**(p_2), 2**(p_1)+2**(p_2)+2**(p_3)-1) + ...
 """
 
 from math import log2
