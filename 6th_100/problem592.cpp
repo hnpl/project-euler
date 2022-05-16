@@ -32,7 +32,7 @@ constexpr ui pow(ui base, ui exp)
 const ui N = factorial(20);
 const ui M = 48;
 const ui MOD = 1ULL << M;
-const ui cache_size = 1ULL << 29;
+const ui cache_size = 1ULL << 24;
 
 //const ui N = 20;
 //const ui cache_size = 1 << 2;
@@ -72,10 +72,28 @@ ui inverse_mod(const ui n, const ui mod)
     return Fl_invgen(n, mod, &t1);
 }
 
+ui pow_mod(const ui& base, const ui& exp, const ui& mod)
+{
+    ui b = base;
+    ui e = exp;
+    ui ans = 1;
+    while (e > 0)
+    {
+        if (e % 2 == 1)
+        {
+            ans *= b;
+            ans %= mod;
+        }
+        e /= 2;
+        b *= b;
+        b %= mod;
+    }
+    return ans;
+}
+
 // n should be odd
 ui calculate_double_factorial(ui n, const vector<ui>& factorial_cache, unordered_map<ui, ui>& sum_cache, const vector<ui>& inverse_mod_sum_cache)
 {
-    //cout << "calculating " << n <<"!!" << endl;
     // assume that the cache size is an even number
     // we add one to n to make it easier to deal with
     n = n + 1;
@@ -85,24 +103,18 @@ ui calculate_double_factorial(ui n, const vector<ui>& factorial_cache, unordered
 
     ui k = n / cache_size - 1;
     ui ans = 1;
-    //cout << "+-- k: " << k << endl;
 
     // full sum
     // k is only valid when n >= cache_size; e.g. n=20, cache_size=20 -> k=0 // full_sum up to k=0
-    //                                            n=39, cache_size=20 -> k=0
+    //                                            n=38, cache_size=20 -> k=0
     //                                            n=40, cache_size=20 -> k=1
     //                                            n=42, cache_size=20 -> k=1
     ans *= sum_cache[k];
-    //cout << "+-- sum_cache[k]: " << sum_cache[k] << endl;
-    //if (n<(k+1)*cache_size)
-    //    return ans;
 
     // tail calculation
     ui tail_n = n - (k+1)*cache_size;
-    //cout << "+-- tail_n: " << tail_n << endl;
     if (tail_n == 0)
         return ans;
-    //cout << " ** tail " << tail_n << " " << factorial_cache[tail_n] << " " << inverse_mod_sum_cache[tail_n] << endl;
     ui tail_c = factorial_cache[tail_n-1];
     ui tail_alpha = inverse_mod_sum_cache[tail_n-1];
     ans *= (((((((k+1) * cache_size) % MOD) * tail_c) % MOD) * tail_alpha) % MOD + tail_c);
@@ -125,11 +137,7 @@ int main()
     vector<ui> inverse_mod_sum_cache = vector<ui>(cache_size+1, 0);
     inverse_mod_sum_cache[1] = inverse_mod(1, MOD);
     for (ui n = 3; n <= cache_size; n+=2) // this loop dominates the warming up phase
-    {
-        //if (n % 1000001 == 0)
-        //    cout << n << endl;
         inverse_mod_sum_cache[n] = (inverse_mod_sum_cache[n-2] + inverse_mod(n, MOD)) % MOD;
-    }
 
     // warming up the sum_cache
     unordered_map<ui, ui> sum_cache;
@@ -140,6 +148,8 @@ int main()
     {
         ui k = (N-base/2)/base+1;
         k = 2*k;
+        if (k == 0)
+            continue;
         k = k/cache_size-1;
         interested_k.insert(k);
         base *= 2;
@@ -148,18 +158,24 @@ int main()
     ui running_sum = 1;
     ui alpha = inverse_mod_sum_cache[cache_size-1]; // cache_size must be even
     ui c = factorial_cache[cache_size-1];
-   
-    for (ui k = 0; k <= N / cache_size; k++)
+ 
+    for (auto k: interested_k)
     {
-        //if (k % 1000001 == 0)
-        //    cout << k << endl;
-        running_sum *= ((((((k * cache_size) % MOD) * c) % MOD) * alpha) % MOD) + c;
-        running_sum %= MOD;
-        if (interested_k.find(k) != interested_k.end())
+        if (k == 0)
         {
-            sum_cache[k] = running_sum;
-            //cout << "sum_cache[" << k << "]=" << sum_cache[k] << endl;
+            sum_cache[k] = c;
+            continue;
         }
+        ui product = 1;
+        product *= cache_size * alpha;
+        product %= MOD;
+        product *= pow_mod(c, k, MOD);
+        product %= MOD;
+        product *= k*(k+1)/2;
+        product %= MOD;
+        product += pow_mod(c, k+1, MOD);
+        product %= MOD;
+        sum_cache[k] = product;
     }
 
     base = 2;
@@ -171,10 +187,8 @@ int main()
         ui double_factorial = calculate_double_factorial(n-1, factorial_cache, sum_cache, inverse_mod_sum_cache);
         ans *= double_factorial;
         ans %= MOD;
-        //cout << ">>>>>>" << " " << double_factorial << endl;
         base *= 2;
     }
-    cout << ans << endl;
 
     // power of 2 counting
     ui count_power_of_2 = 0;
