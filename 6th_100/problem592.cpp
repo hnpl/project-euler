@@ -1,5 +1,56 @@
 // Question: https://projecteuler.net/problem=592
 
+/*
+  - Strategy:
+    . The main idea is that, we can calculate the product of this sequence (mod MOD) for some number A such that MOD = A^2,
+        . The sequence, { (k*A+1), (k*A+3), (k*A+5), ..., (k*A+(2*n+1)) }
+        . Why?
+            (k*A+1) * (k*A+3) * (k*A+5) * ... * (k*A+(2*n+1)) [mod A^2]
+          = something * A^(n+1) + something * A^(n) + ... + something * A^2 + (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * A + c [mod A^2]
+            where c = 1 * 3 * 5 * ... * (2*n+1)
+          =                   0 +                0  + ... +               0 + (c/1 + c/3 + c/5 + ... + c/(2*n+1)) k * A + c [mod A^2]
+          = (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * k * A + c
+        . So, if the sequence is short enough, we can easily calculate the product (mod MOD) via bruteforce.
+    . Let F(k, A, n) = product_([(k*A+1), (k*A+3), (k*A+5), ..., (k*A+(2*n+1))]) (mod MOD)
+                     = (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * k * A + c
+                     where c = 1 * 3 * 5 * ... * (2*n+1)
+    . Note that, by definition, the double factorial, e.g. (2*n+1)!!, is the product of odd numbers from 1 to 2*n+1.
+
+    . So, the question asks for the last 12 digits of N! without the trailing zeros.
+        . To get the last 12 digits of N!, we can do N! (mod 2^48)
+        . However, to get the last 12 digits without the trailing zeros,
+          we'd want to compute K * 2^(p (mod 4)) (mod 2^48) where N! = K * 2^p and p is such that N! is not divisible 2^(p+1) (i.e. p is the number of factors of 2 in N!)
+            . We don't want to get rid all of factors of 2 in N! because 2^0 = 1, 2^1 = 2, 2^2 = 4, 2^3 = 8, and all of them does not produce 0 in the hexadecimal representation.
+    . We can calculate p via,
+        . p = sum(floor(N / 2^t)) for all t < log2(N).
+    . So, how to calculate K?
+        . Consider a small N,                                                                                                                                   The product of odd numbers in the sequence
+                                                             20! = 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * 10 * 11 * 12 * 13 * 14 * 15 * 16 * 17 * 18 * 19 * 20    | 19!!
+removing 2^1 for even numbers that are not divisible by 2^2 |          1       .       3       .        5         .         7         .         9              | 9!!
+removing 2^2 for even numbers that are not divisible by 2^3 |                  1               .                  3                   .                   5    | 5!!
+removing 2^3 for even numbers that are not divisible by 2^4 |                                  1                                      .                        | 1!!
+removing 2^4 for even numbers that are not divisible by 2^5 |                                                                         1                        | 1!!
+        . Essentially, K = product ((N/2^t)!!) for all t < log2(N).
+        . The next problem to efficiently calculate the double factorial (2*n+1)!! (mod MOD) for some large n.
+            . Note that (2*n+1)!! is essentially the product of odd numbers upto 2*n+1.
+            . We can divide the odd numbers sequence into multiple sequences, where each sequence is of size A such that A^2 = MOD (except for the tail sequence, which is of size B < A).
+              For convenient, let's choose an even number A.
+            . The product of the first sequence is      P_1 = (0*A+1) * (0*A+3) * (0*A+5) * ... * (0*A+A-1) = F(0, A, A/2) = (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * 0 * A + c
+              The product of the second sequence is     P_2 = (1*A+1) * (1*A+3) * (1*A+5) * ... * (1*A+A-1) = F(1, A, A/2) = (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * 1 * A + c
+              The product of the third sequence is      P_3 = (2*A+1) * (2*A+3) * (2*A+5) * ... * (2*A+A-1) = F(2, A, A/2) = (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * 2 * A + c
+              ...
+              The product of the last full sequence is  P_m = (m*A+1) * (m*A+3) * (m*A+5) * ... * (m*A+A-1) = F(m, A, A/2) = (c/1 + c/3 + c/5 + ... + c/(2*n+1)) * m * A + c
+              Let P_t be the product of the tail sequence. We can directly calculate P_t using product.
+              for c = 1 * 3 * 5 * ... * (A-1) = (A-1)!!
+            . In the code, we denote alpha as alpha = (c/1 + c/3 + c/5 + ... + c/(2*n+1))
+            . So, (2*n+1)!! = P_1 * P_2 * ... * P_m * P_t (mod MOD)
+                            = (alpha * 0 * A + c) * (alpha * 1 * A + c) * (alpha * 2 * A + c) * ... * (alpha * m * A + c) * P_t (mod MOD)
+                            = (something * A^(m+1) + something * A^m + ... + something * A^2 + (c^m * alpha * 0 + c^m * alpha * 1 + ... + c^m * alpha * m) * A + c^(m+1)) * P_t (mod MOD)
+                            = (                  0 +               0 + ... +               0 + c^m * alpha * A * sum(1..m) + c^(m+1)) * P_t (mod MOD)
+                            = (c^m * alpha * A * m(m+1)/2 + c^(m+1)) * P_t (mod MOD)
+            . Plug this back to K = product ((N/2^t)!!) for all t < log2(N).
+*/
+
 #include<pari/pari.h>
 #include<iostream>
 #include<sstream>
