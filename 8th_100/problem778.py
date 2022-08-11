@@ -1,5 +1,33 @@
 # Question: https://projecteuler.net/problem=778
 
+"""
+  . Let c = a [x] b where a = (... a_2, a_1, a_0), b = (... b_2, b_1, b_0), c = (... c_2, c_1, c_0).
+                    where c_k = (a_k * b_k) % 10.
+
+  . We want to find F(R, M), which is the sum of all G(x_1, x_2, ..., x_R) where 0 <= x_k <= M for all k
+                             and G(x_1, x_2, ..., x_R) = x_1 [x] x_2 [x] ... [x] x_R.
+
+  . Note that, for each G(x_1, x_2, ..., x_R), we can calculate each digit of G independently.
+    This means, if we know the frequencies of digits from 0 to 9 at each place value (ones, tens, hundreds ...), we can find the sum of that place value in F using Markov process.
+    (The independence among place values results in the property that, for example, we don't need to care if "the digit is 7aaaaa then the next place value must be <= 6")
+  . We can set up the Markov process such that, for a fixed place value k,
+    . The state S at iteration P is where S[d] means how many tuples of length P having the product of digits at the place value k ends with d.
+    . The transition matrix T where T[i,j] = q means, if the product of length P has the ending digit of j, then it will contribute to the product of length P+1 having i as the ending digit q times.
+    . We can calculate q by, for all s such that (j * s) % 10 = i, we sum how many times s appears in the place value k across all integers in the range [0, M].
+
+  . The remaining question is, given a range [0, M], how many times s appears at the place value k across all integers in the range [0, M].
+    . The first occurance of digit s at the place value k is at s * (10 ** k).
+      . E.g., suppose the range is [0, 765], the first occurrence of 9 at tens is 90 = 9 * (10**1).
+    . Every time we see the apparence of digit s at the place value k, we'll see them in a cluster of length 10 ** k,
+      and the distance between two nearest clusters is 10 ** (k+1).
+      . E.g., suppose the range is [0, 765], the occurrences of 9 at tens are [90, 99] (length 10 = 10**1)
+                                                                              [190, 199] (length 10) (distance to [90, 99] is 100)
+                                                                              [290, 299] (length 10) (distance to [190, 199] is 100)
+                                                                              ...
+    . So, essentially, we are measuring the length of the considered segments in the range [0,M], which is basically,
+      length_of_one_segment * number_of_whole_segments + length_of_tail_segment
+"""
+
 import numpy as np
 from math import log, ceil
 
