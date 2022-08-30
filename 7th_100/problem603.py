@@ -43,8 +43,19 @@ def S(n, n_periods):
 
     n_str = str(n)
     period_length = len(n_str)
-    n_periods = n_periods
     n_digits = n_periods * period_length
+
+    L = period_length
+    #assert(isinstance(L, int))
+    N = n_periods
+    #assert(isinstance(N, int))
+
+    pow_10_L = R(10)**L
+    pow_10_LN = R(10)**((L*N)%(multiplicative_order(mod(10, MOD))))
+    inv_mod_pow_10_L_1 = R(1) // (pow_10_L-1)
+    inv_mod_9 = R(1) // 9
+
+    print(pow_10_L, pow_10_LN)
 
     for inversed_place_value, digit_str in enumerate(n_str):
         if inversed_place_value % 10000 == 0:
@@ -63,15 +74,16 @@ def S(n, n_periods):
         #ans += digit * coeff_sum // 9
         # Since multiplicative_order(10, 10**9+7) = 10**9+6, then L, N, a in 10**(L+1-a) (mod 10**9+7) must be of the ModRing(10**9+6)! Putting L, N, a to IntegerModRing(10**9+7) would result in an incorrect result.
         L = period_length
-        assert(isinstance(L, int))
+        #assert(isinstance(L, int))
         N = n_periods
-        assert(isinstance(N, int))
+        #assert(isinstance(N, int))
         a = offset
-        assert(isinstance(a, int))
-        part_1 = a*((R(10)**(L+1-a))*(R(10)**(L*N)-1) // (R(10)**L-1) - N)
-        part_2 = L * (2*(R(10)**(L+1-a))*(R(10)**(L*N)-1) + (1-R(10)**L)*(N*(2*(R(10)**(L+1-a))-R(10)**L+1)) - (N**2)*((R(10)**L-1)**2)) // (2*((R(10)**L-1)**2))
-        coeff = part_1 + part_2
-        ans += digit * coeff // 9
+        #assert(isinstance(a, int))
+        pow_10_La1 = R(10)**(L+1-a)
+        part_1 = (pow_10_La1)*(pow_10_LN-1) * inv_mod_pow_10_L_1 - N
+        part_2 = (2*(pow_10_La1)*(pow_10_LN-1) + (1-pow_10_L)*(N*(2*(pow_10_La1)-pow_10_L+1)) - (N**2)*((pow_10_L-1)**2)) * (inv_mod_pow_10_L_1**2) // 2
+        coeff = a * part_1 + L * part_2
+        ans += digit * coeff * inv_mod_9
     return ans
 
 def C(n):
