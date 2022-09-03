@@ -29,7 +29,7 @@
     . We can define a state as (a - g; b - h; c - i; d - j; e - f; prev_move) and use state-based dynamic programming to count the number of path of length N.
       For the robot to return to its initial position, then,
         a - g == b - h == c - i == d - j == e - f (***)
-    . However, for state-based dynamic programming, we don't need to count paths upto the length N (see problem208_meet_in_the_middle.cpp)
+    . However, for state-based dynamic programming, we don't need to count paths upto the length N.
       We can count paths upto to the length N/2, then for each state S at N/2, we can generate the compatible states that are compatible to S.
       A compatible state T that is compatible to S if,
         . Assume that the prev_move of S is at degree K.
@@ -79,7 +79,8 @@ enum Move
     COUNTER_CLOCKWISE_FROM_144 = 7,
     COUNTER_CLOCKWISE_FROM_216 = 8,
     COUNTER_CLOCKWISE_FROM_288 = 9,
-    INVALID = 10
+    N_MOVES = 10,
+    INVALID = 11
 };
 
 enum Direction
@@ -136,18 +137,40 @@ constexpr bool is_counter_clockwise_move(const Move& curr_move)
     return curr_move >= 5;
 };
 
+
+const vector<Move> rotate_move_72_counter_clockwise = { Move::CLOCKWISE_FROM_288,  // CLOCKWISE_FROM_0
+                                                        Move::CLOCKWISE_FROM_0,  // CLOCKWISE_FROM_72
+                                                        Move::CLOCKWISE_FROM_72,  // CLOCKWISE_FROM_144
+                                                        Move::CLOCKWISE_FROM_144,  // CLOCKWISE_FROM_216
+                                                        Move::CLOCKWISE_FROM_216,  // CLOCKWISE_FROM_288
+                                                        Move::COUNTER_CLOCKWISE_FROM_288,  // COUNTER_CLOCKWISE_FROM_0
+                                                        Move::COUNTER_CLOCKWISE_FROM_0,  // COUNTER_CLOCKWISE_FROM_72
+                                                        Move::COUNTER_CLOCKWISE_FROM_72,  // COUNTER_CLOCKWISE_FROM_144
+                                                        Move::COUNTER_CLOCKWISE_FROM_144,  // COUNTER_CLOCKWISE_FROM_216
+                                                        Move::COUNTER_CLOCKWISE_FROM_216}; // COUNTER_CLOCKWISE_FROM_288
+
+Move rotate_move_counter_clockwise(const Move& curr_move, const ui& n_times)
+{
+    ui offset = is_counter_clockwise_move(curr_move) ? 5 : 0;
+    return Move(offset + (curr_move - n_times) % 5);
+};
+
+Move rotate_move_clockwise(const Move& curr_move, const ui& n_times)
+{
+    ui offset = is_counter_clockwise_move(curr_move) ? 5 : 0;
+    return Move(offset + (curr_move + n_times) % 5);
+};
+
 class State
 {
     private:
         ui hash;
-        ui prev_move;
         static const ui DIFF_WIDTH;
         static const ui MOVE_WIDTH;
     public:
         State()
         {
             this->hash = 0;
-            this->prev_move = 0;
         }
         State(const array<int8_t, 5>& diff, const ui& prev_move)
         {
@@ -205,15 +228,6 @@ class State
             for (auto next_move: next_moves)
             {
                 array<int8_t, 5> next_diff = curr_diff;
-                /*
-                ui move_idx = next_move % 5;
-                if (is_counter_clockwise_move(next_move))
-                    next_diff[move_idx] -= 1;
-                else
-                    next_diff[move_idx] += 1;
-                if (abs(next_diff[move_idx]) > N/5)
-                    continue;
-                */
                 Direction new_direction = move_destination_map[next_move];
                 if (is_counter_clockwise_move(next_move))
                 {
@@ -247,7 +261,88 @@ class State
             s << "]; prev_move = " << prev_move;
             return s.str();
         }
+        void rotate_counter_clockwise(const ui& n_times) // rotate 72 degrees n_times counter-clockwise
+        {
+            auto p = this->decode();
+            auto curr_diff = p.first;
+            Move prev_move = Move(p.second);
+            array<int8_t, 5> new_diff;
+            for (ui new_idx = 0; new_idx < new_diff.size(); new_idx++)
+                new_diff[new_idx] = curr_diff[(new_idx+n_times)%5];
+            Move new_prev_move = rotate_move_counter_clockwise(prev_move, n_times);
+            this->hash = this->encode(new_diff, new_prev_move);
+        }
+        void rotate_clockwise(const ui& n_times) // rotate 72 degrees n_times clockwise
+        {
+            auto p = this->decode();
+            auto curr_diff = p.first;
+            Move prev_move = Move(p.second);
+            array<int8_t, 5> new_diff;
+            for (ui new_idx = 0; new_idx < new_diff.size(); new_idx++)
+                new_diff[new_idx] = curr_diff[(new_idx-n_times)%5];
+            Move new_prev_move = rotate_move_clockwise(prev_move, n_times);
+            this->hash = this->encode(new_diff, new_prev_move);
+        }
+        vector<ui> generate_compatible_state_hashes(const ui& n) const
+        {
+            vector<ui> next_state_hashes;
+
+            auto p = this->decode();
+            auto curr_diff = p.first;
+            Move prev_move = Move(p.second);
+
+            // Generate according to the expected diff
+            for (int8_t expected_diff = -n/5; expected_diff <= n/5; expected_diff++)
+            {
+                array<int8_t, 5> next_diff = { expected_diff, expected_diff, expected_diff, expected_diff, expected_diff };
+                bool valid = true;
+                for (ui i = 0; i < next_diff.size(); i++)
+                {
+                    next_diff[i] -= curr_diff[i];
+                    if (abs(next_diff[i]) > n/5)
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (!valid)
+                    continue;
+                Direction curr_direction = move_destination_map[prev_move];
+                ui n_counter_clockwise_rotations = 0;
+                switch (curr_direction)
+                {
+                    case AT_0:
+                        n_counter_clockwise_rotations = 0;
+                        break;
+                    case AT_72:
+                        n_counter_clockwise_rotations = 1;
+                        break;
+                    case AT_144:
+                        n_counter_clockwise_rotations = 2;
+                        break;
+                    case AT_216:
+                        n_counter_clockwise_rotations = 3;
+                        break;
+                    case AT_288:
+                        n_counter_clockwise_rotations = 4;
+                        break;
+                    default:
+                        break;
+                };
+                for (int next_prev_move = Move::CLOCKWISE_FROM_0; next_prev_move <= Move::COUNTER_CLOCKWISE_FROM_288; next_prev_move++)
+                {
+                    State next_state = State(next_diff, next_prev_move);
+                    next_state.rotate_counter_clockwise(n_counter_clockwise_rotations);
+                    ui next_state_hash = next_state.get_hash();
+                    next_state_hashes.push_back(next_state_hash);
+                    //cout << "Match " << this->to_string() << " * and * " << next_state.to_string() << "; n_times=" << n_counter_clockwise_rotations << "; diff = " << (ui)expected_diff << endl;
+                }
+            }
+
+            return next_state_hashes;
+        }
 };
+
 const ui State::DIFF_WIDTH = 8;
 const ui State::MOVE_WIDTH = 4;
 
@@ -304,9 +399,66 @@ ui count_paths(ui n)
     return ans;
 }
 
+ui count_paths_meet_in_the_middle(ui n)
+{
+    ui ans = 0;
+
+    unordered_map<ui, State> hash_state_map;
+    unordered_map<ui, ui> hash_count_1;
+    unordered_map<ui, ui> hash_count_2;
+    unordered_map<ui, ui>& prev = hash_count_1;
+    unordered_map<ui, ui>& curr = hash_count_2;
+
+    State initial_state = State::get_initial_state();
+    ui initial_state_hash = initial_state.get_hash();
+    hash_state_map[initial_state_hash] = initial_state;
+    curr[initial_state_hash] = 1;
+
+    for (ui i = 0; i < n/2; i++)
+    {
+        cout << i << " " << curr.size() << endl;
+        swap(curr, prev);
+        curr.clear();
+
+        for (auto prev_state_p: prev)
+        {
+            ui prev_state_hash = prev_state_p.first;
+            ui prev_state_count = prev_state_p.second;
+            auto prev_state = hash_state_map[prev_state_hash];
+            for (auto next_state: prev_state.get_next_states(n/5))
+            {
+                ui next_state_hash = next_state.get_hash();
+                if (hash_state_map.find(next_state_hash) == hash_state_map.end())
+                    hash_state_map[next_state_hash] = next_state;
+                if (curr.find(next_state_hash) == curr.end())
+                    curr[next_state_hash] = 0;
+                curr[next_state_hash] += prev_state_count;
+            }
+        }
+    }
+
+    for (auto curr_state_p: curr)
+    {
+        auto curr_state_hash = curr_state_p.first;
+        auto curr_state_count = curr_state_p.second;
+        auto curr_state = hash_state_map[curr_state_hash];
+
+        for (auto compatible_state_hash: curr_state.generate_compatible_state_hashes(n))
+        {
+            if (curr.find(compatible_state_hash) == curr.end())
+                continue;
+            ui compatible_state_count = curr[compatible_state_hash];
+            ans += curr_state_count * compatible_state_count;
+        }
+    }
+
+    return ans;
+}
+
 int main()
 {
-    ui ans = count_paths(N);
+    //ui ans = count_paths(N);
+    ui ans = count_paths_meet_in_the_middle(N);
     cout << ans << endl;
     return 0;
 }
