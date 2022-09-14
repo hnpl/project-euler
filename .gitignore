@@ -11,3 +11,11 @@
 *.cb
 *.cb2
 .*.lb
+
+# vim
+*.swp
+*.swo
+
+# Python
+*.pyc
+__pycache__/
