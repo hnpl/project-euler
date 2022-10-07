@@ -8,3 +8,4 @@
 
 `problem701`: graph coloring. There are two incorrect implementation but failed differently. So, having two incorrect implementations might result in a correct implementation :D
 
+`problem810`: using x86's clmul / arm's vmull for carry-less multiplication results in ~5x speedup.
