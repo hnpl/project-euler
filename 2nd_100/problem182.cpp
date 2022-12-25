@@ -42,7 +42,7 @@ ui find_exp_cycle_length(ui base) // assume mod = 1009 * 3643
     ui length = 0;
 
     if (!((base % 1009 == 0) || (base % 3643 == 0)))
-        return gtolong(order(gmodulss(base, N)));
+        return gtolong(znorder(gmodulss(base, N), NULL));
 
     unordered_set<ui> seen;
 

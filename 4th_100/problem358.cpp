@@ -74,7 +74,7 @@ ui next_prime(ui prime)
 
 inline long find_cycle_length(long n)
 {
-    return gtolong(order(gmodulss(10, n))); // order(): find multiplicative order, gmodulss(10, n): find n mod 10
+    return gtolong(znorder(gmodulss(10, n), NULL)); // order(): find multiplicative order, gmodulss(10, n): find n mod 10
 }
 
 inline ui sum_1_n(ui n)

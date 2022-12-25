@@ -100,7 +100,7 @@ i64 invmod(i64 base, i64 mod)
     // if k is the multiplicative order of a mod M, then a^k = 1 (mod M)
     // -> a * a^(k-1) = 1 (mod M)
     // -> invmod(a, M) = a^(k-1)
-    i64 multiplicative_order = gtolong(order(gmodulss(base, mod)));
+    i64 multiplicative_order = gtolong(znorder(gmodulss(base, mod), NULL));
     return modpow(base, multiplicative_order-1, mod);
 };
 
