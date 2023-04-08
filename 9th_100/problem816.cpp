@@ -17,6 +17,7 @@ typedef int64_t ui;
 const ui N = 2000000;
 const ui SEED = 290797;
 const ui MOD = 50515093;
+const ui UI_MAX = 1ULL << 62;
 
 using namespace std;
 
@@ -39,6 +40,12 @@ class Point
             const double delta_x = this->x - other.x;
             const double delta_y = this->y - other.y;
             return sqrt(delta_x * delta_x + delta_y * delta_y);
+        }
+        ui distance_square(const Point& other) const
+        {
+            const ui delta_x = this->x - other.x;
+            const ui delta_y = this->y - other.y;
+            return delta_x * delta_x + delta_y * delta_y;
         }
         bool operator== (const Point& rhs) const
         {
@@ -64,6 +71,7 @@ class RNG
         }
 };
 
+/*
 vector<Point> generate_points(const ui& numPoints)
 {
     vector<Point> points;
@@ -73,74 +81,81 @@ vector<Point> generate_points(const ui& numPoints)
         points.emplace_back(rng.get_next(), rng.get_next());
     return points;
 }
+*/
 
-double min_distance_1_vector(const vector<Point>& v)
+const ui hash_offset = 1ULL << 26;
+
+inline ui hash_function(const ui& grid_x, const ui& grid_y)
 {
-    double ans = std::numeric_limits<double>::max();
+    return grid_x * hash_offset + grid_y;
+}
+
+inline void dehash_function(const ui& hash, ui& grid_x, ui& grid_y)
+{
+    grid_x = hash / (hash_offset);
+    grid_y = hash % (hash_offset);
+}
+
+unordered_map<ui, vector<Point>> generate_point_grid(const ui& numPoints)
+{
+    unordered_map<ui, vector<Point>> grid;
+    const ui grid_size = 1ULL << 17;
+    RNG rng(SEED, MOD);
+
+    for (ui i = 0; i < numPoints; i++)
+    {
+        ui point_x = rng.get_next();
+        ui point_y = rng.get_next();
+        const ui grid_x = point_x / grid_size;
+        const ui grid_y = point_y / grid_size;
+        auto key = hash_function(grid_x, grid_y);
+        grid[key].emplace_back(point_x, point_y);
+    }
+
+    return grid;
+}
+
+ui min_distance_1_vector(const vector<Point>& v)
+{
+    ui ans = UI_MAX;
 
     const ui n = v.size();
     for (ui i = 0; i < n; i++)
         for (ui j = i+1; j < n; j++)
-            ans = min(ans, v[i].distance(v[j]));
+            ans = min(ans, v[i].distance_square(v[j]));
 
     return ans;
 }
 
-double min_distance_2_vectors(const vector<Point>& v1, const vector<Point>& v2)
+ui min_distance_2_vectors(const vector<Point>& v1, const vector<Point>& v2)
 {
-    double ans = std::numeric_limits<double>::max();
-    for (auto const& p1: v1)
-        for (auto const& p2: v2)
-            ans = min(ans, p1.distance(p2));
+    ui ans = UI_MAX;
+    //for (auto const& p1: v1)
+    //    for (auto const& p2: v2)
+    //        ans = min(ans, p1.distance_square(p2));
+    const ui n = v1.size();
+    const ui m = v2.size();
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            ans = min(ans, v1[i].distance_square(v2[j]));
     return ans;
 }
 
-double solve(const vector<Point>& points)
+double solve(const ui& numPoints)
 {
-    double ans = 0;
+    ui ans = 0;
 
-    ui max_x = 0;
-    ui max_y = 0;
-    ui min_x = -1;
-    ui min_y = -1;
-    for (auto const& point: points)
-    {
-        max_x = max(point.x, max_x);
-        max_y = max(point.y, max_y);
-        min_x = min(point.x, min_x);
-        min_y = min(point.y, min_y);
-    }
-
-    const ui grid_size = (1ULL << 10);
-
-    const ui max_grid_x = (max_x+grid_size-1) / grid_size;
-    const ui max_grid_y = (max_y+grid_size-1) / grid_size;
-    unordered_map<ui, vector<Point>> grid;
-    auto hash_function = [max_grid_y](ui grid_x, ui grid_y) -> ui {
-        return grid_x * (max_grid_y+1) + grid_y;
-    };
-    auto dehash_function = [max_grid_y](ui hash) -> pair<ui, ui> {
-        return make_pair(hash / (max_grid_y+1), hash % (max_grid_y+1));
-    };
-    for (auto const& point: points)
-    {
-        const ui grid_x = point.x / grid_size;
-        const ui grid_y = point.y / grid_size;
-        auto key = hash_function(grid_x, grid_y);
-        if (grid.find(key) == grid.end())
-            grid[key] = vector<Point>();
-        grid[key].push_back(move(point));
-    }
+    auto grid = generate_point_grid(numPoints);
 
     cout << "Non empty grid cells: " << grid.size() << endl;
 
     // iterate all cells in the grid
-    ans = std::numeric_limits<double>::max();
+    ans = UI_MAX;
     for (auto const& cell: grid)
     {
-        auto grid_coordinate = dehash_function(cell.first);
-        ui grid_x = grid_coordinate.first;
-        ui grid_y = grid_coordinate.second;
+        ui grid_x;
+        ui grid_y;
+        dehash_function(cell.first, grid_x, grid_y);
         const vector<Point>& points = cell.second;
         // find the min distance among all pairs in a cell
         ans = min(ans, min_distance_1_vector(points));
@@ -160,14 +175,13 @@ double solve(const vector<Point>& points)
         }
     }
 
-    return ans;
+    return sqrt(ans);
 }
 
 int main()
 {
     double ans = 0;
-    vector<Point> points = generate_points(N);
-    ans = solve(points);
+    ans = solve(N);
     cout << setprecision(12) <<  ans << endl;
     return 0;
 }
