@@ -2,6 +2,34 @@
 
 /*
  * Ideas,
+ *   - According to https://en.wikipedia.org/wiki/Prime_omega_function, sum_{r divides n} 2^w(r) = d(n^2),
+ *     where d is a divisor function calculating the number of divisors of the input.
+ *   - So, the problem turns into calculating the sum of d((n^2)!).
+ *   - Note that, for d(k), if k = p_1^a_1 * ... * p_m^a_m, then d(k) = (a_1+1)(a_2+1)...(a_m+1).
+ *   - So, the problem requires us to do factorization of n! for all n <= N.
+ *   - I don't know a fast algorithm to factorize a series of number. However, I did some optimization as follows,
+ *       - First, we sieve primes from 1 to sqrt(N).
+ *       - Using primes from 1 to sqrt(N), we can construct a set S of numbers from 1 to N such that, for every number
+ *         e in S, the number e does not have a prime factor of larger than sqrt(N). We can construct the set S using DFS.
+ *       - Let T = {1..N} \ S.
+ *       - Every number in T contains a prime factor that is bigger than sqrt(N), let's call this prime factor "a big prime factor".
+ *         Note that, because [sqrt(N)]^2 >= N, the square of the big prime factor is strictly bigger than N, so we have a guarantee
+ *         that, every element in T only has 1 big factor and its exponent is 1.
+ *         So, we can construct T from S by multiplying primes in S with the set S (this smells like group actions).
+ *       - Sieving takes O(NloglogN) time.
+ *         Constructing S takes O(NlogN) time. // It takes at most O(logN) function calls to generate each number. 
+ *         Constructing T takes O(N^2) time.   // We take O(N) elements in S and apply O(N) operations to each element in S.
+ *         So, in total, we factorize the O(N) numbers in O(N^2) time.
+ *    - Suppose that    n! = p_1^a_1 ... p_m^a_m,
+ *               and   n+1 = q_1^b_1 ... q_t^b^t.
+ *               and S(n!) = (2*a_1+1)(2*a_2+1)...(2*a_m+1)
+ *      Suppose that Y = intersect({p_i for all i}, {q_j for all j})
+ *               and Z = union({p_i for all i}, {q_j for all j})
+ *               and T = {q_j for all j} - {p_i for all i}
+ *      Then, S((n+1)!) = alpha * beta / gamma,
+ *        where beta = product{(2*l_i+1) for all t_i \in T and corresponding exponent l_i (the exponents are taken from q_i)} * product{(2*k_i+1) for all y_i \in Y and corresponding exponent k_i (the exponents
+ *      are taken from q_i)
+ *        and  gamma = product{(2*u_i+1) for all y_i \in Y and coresponding exponent u_i (the exponents are taken from p_i)
  */
 
 #include"pari/pari.h"
@@ -101,9 +129,10 @@ void dfs(const ui& depth, vector<ui>& prime_idx_path, vector<ui>& exp_path,
 
 inline ui get_inverse_mod(const ui& n, const ui& mod, unordered_map<ui, ui>& cached_inverse_mod)
 {
-    if (cached_inverse_mod.find(n) == cached_inverse_mod.end())
-        cached_inverse_mod[n] = inverse_mod(n, mod);
-    return cached_inverse_mod[n];
+    //if (cached_inverse_mod.find(n) == cached_inverse_mod.end())
+    //    cached_inverse_mod[n] = inverse_mod(n, mod);
+    //return cached_inverse_mod[n];
+    return inverse_mod(n, mod); // caching did not help much
 }
 
 ui solve(const ui& n, const ui& mod)
